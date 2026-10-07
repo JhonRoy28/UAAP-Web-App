@@ -81,9 +81,9 @@ CUSTOM_CSS = """
 <style>
     /* Page width and spacing */
     .block-container {
-        max-width: 1100px;
-        padding-top: 2rem;
-        padding-bottom: 3rem;
+        max-width: 1080px;
+        padding-top: 1.25rem;
+        padding-bottom: 2rem;
     }
     [data-testid="stAppViewContainer"] {
         background: #ffffff;
@@ -92,11 +92,11 @@ CUSTOM_CSS = """
         background: #ffffff;
     }
 
-    /* Hero header */
+    /* Clean Season 88 header */
     .hero {
         background: #ffffff;
         border: 1px solid #e5e7eb;
-        border-top: 8px solid #003da5;
+        border-top: 5px solid #003da5;
         border-image: linear-gradient(
             90deg,
             #0057a8 0%,
@@ -108,21 +108,11 @@ CUSTOM_CSS = """
             #fdb81e 84%,
             #0057a8 100%
         ) 1;
-        border-radius: 20px;
-        padding: 2.2rem 2.4rem;
-        margin-bottom: 1.4rem;
-        box-shadow: 0 12px 32px rgba(11, 31, 58, 0.28);
+        border-radius: 14px;
+        padding: 1.5rem 1.75rem;
+        margin-bottom: 1.25rem;
+        box-shadow: 0 4px 16px rgba(17, 24, 39, 0.06);
         position: relative;
-        overflow: hidden;
-    }
-    .hero::after {
-        content: "🏐";
-        position: absolute;
-        right: 2rem;
-        top: 50%;
-        transform: translateY(-50%);
-        font-size: 6rem;
-        opacity: 0.15;
     }
     .hero .badge {
         display: inline-block;
@@ -135,12 +125,12 @@ CUSTOM_CSS = """
         font-weight: 600;
         letter-spacing: 0.08em;
         text-transform: uppercase;
-        margin-bottom: 0.8rem;
+        margin-bottom: 0.55rem;
     }
     .hero h1 {
         color: #111827;
-        font-size: 2.3rem;
-        font-weight: 800;
+        font-size: 2rem;
+        font-weight: 750;
         letter-spacing: -0.02em;
         line-height: 1.15;
         margin: 0;
@@ -149,8 +139,8 @@ CUSTOM_CSS = """
     .hero p {
         color: #4b5563;
         font-size: 1.02rem;
-        margin: 0.6rem 0 0 0;
-        max-width: 640px;
+        margin: 0.45rem 0 0 0;
+        max-width: 720px;
     }
 
     /* Section titles */
@@ -160,52 +150,53 @@ CUSTOM_CSS = """
         letter-spacing: 0.12em;
         text-transform: uppercase;
         opacity: 0.65;
-        margin: 1.4rem 0 0.6rem 0;
+        margin: 1rem 0 0.5rem 0;
     }
 
     /* Bordered cards */
     div[data-testid="stVerticalBlockBorderWrapper"] {
-        border-radius: 16px;
-        box-shadow: 0 4px 18px rgba(0, 0, 0, 0.07);
+        border-radius: 12px;
+        border-color: #e5e7eb;
+        box-shadow: 0 2px 10px rgba(17, 24, 39, 0.04);
+        padding: 0.85rem 1rem;
     }
 
     /* Team headers inside the input cards */
     .team-tag {
         display: inline-block;
-        border-radius: 8px;
-        padding: 0.25rem 0.7rem;
+        border-radius: 6px;
+        padding: 0.2rem 0.55rem;
         font-size: 0.78rem;
         font-weight: 700;
         letter-spacing: 0.08em;
         text-transform: uppercase;
         color: #ffffff;
-        margin-bottom: 0.4rem;
+        margin-bottom: 0.25rem;
     }
-    .tag-a, .tag-b { color: #ffffff; }
 
     /* Matchup banner */
     .matchup {
         display: flex;
         align-items: center;
         justify-content: center;
-        gap: 1.4rem;
+        gap: 1rem;
         flex-wrap: wrap;
-        padding: 1.1rem 1rem;
-        border-radius: 16px;
-        background: rgba(127, 127, 127, 0.08);
-        border: 1px solid rgba(127, 127, 127, 0.22);
-        margin-bottom: 1rem;
+        padding: 0.9rem 1rem;
+        border-radius: 12px;
+        background: #f9fafb;
+        border: 1px solid #e5e7eb;
+        margin-bottom: 0.75rem;
     }
     .matchup .team {
-        font-size: 1.5rem;
+        font-size: 1.25rem;
         font-weight: 800;
         letter-spacing: -0.01em;
     }
-    .matchup .team { font-weight: 800; }
     .matchup .vs {
         font-size: 0.85rem;
         font-weight: 800;
-        background: rgba(127, 127, 127, 0.2);
+        background: #ffffff;
+        border: 1px solid #d1d5db;
         border-radius: 999px;
         padding: 0.3rem 0.8rem;
         letter-spacing: 0.1em;
@@ -230,14 +221,14 @@ CUSTOM_CSS = """
         letter-spacing: 0.02em;
         border: none;
         border-radius: 14px;
-        padding: 0.85rem 1.5rem;
-        box-shadow: 0 8px 20px rgba(47, 128, 237, 0.38);
+        padding: 0.65rem 1.25rem;
+        box-shadow: 0 4px 12px rgba(0, 61, 165, 0.2);
         transition: transform 0.12s ease, box-shadow 0.12s ease;
     }
     .stButton > button:hover {
         color: #ffffff;
-        transform: translateY(-2px);
-        box-shadow: 0 12px 26px rgba(47, 128, 237, 0.5);
+        transform: translateY(-1px);
+        box-shadow: 0 6px 16px rgba(0, 61, 165, 0.28);
     }
     .stButton > button:active {
         transform: translateY(0);
@@ -246,7 +237,7 @@ CUSTOM_CSS = """
     /* Probability split bar */
     .prob-bar {
         display: flex;
-        height: 38px;
+        height: 30px;
         border-radius: 999px;
         overflow: hidden;
         box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.2);
@@ -258,7 +249,7 @@ CUSTOM_CSS = """
         justify-content: center;
         color: #ffffff;
         font-weight: 700;
-        font-size: 0.95rem;
+        font-size: 0.8rem;
         white-space: nowrap;
     }
     .prob-labels {
@@ -282,7 +273,7 @@ CUSTOM_CSS = """
         text-align: center;
         font-size: 0.8rem;
         opacity: 0.55;
-        margin-top: 2rem;
+        margin-top: 1.25rem;
     }
 
     /* Hide default Streamlit chrome for a cleaner look */
@@ -305,12 +296,6 @@ def load_model(path: str):
 # ---------------------------------------------------------------------------
 # Helper functions
 # ---------------------------------------------------------------------------
-def clean_name(raw: str, fallback: str) -> str:
-    """Trim the team name and fall back to a default if it is empty."""
-    name = (raw or "").strip()
-    return name if name else fallback
-
-
 def school_text_color(school: str) -> str:
     return "#111827" if school == "UST" else "#ffffff"
 
@@ -466,11 +451,6 @@ with col_a:
             f'color:{school_text_color(team_a_school)};">{team_a_school}</span>',
             unsafe_allow_html=True,
         )
-        team_a_raw = st.text_input(
-            "Team name",
-            value=team_a_school,
-            key="team_a_name",
-        )
         team_a_wins = st.slider(
             "Wins before match",
             min_value=0,
@@ -503,11 +483,6 @@ with col_b:
             f'color:{school_text_color(team_b_school)};">{team_b_school}</span>',
             unsafe_allow_html=True,
         )
-        team_b_raw = st.text_input(
-            "Team name",
-            value=team_b_school,
-            key="team_b_name",
-        )
         team_b_wins = st.slider(
             "Wins before match",
             min_value=0,
@@ -536,9 +511,9 @@ with st.container(border=True):
         help="Later rounds usually mean higher stakes.",
     )
 
-# Resolve the display names and fill in the live banner
-team_a_name = clean_name(team_a_raw, "Team A")
-team_b_name = clean_name(team_b_raw, "Opponent")
+# Use the selected school names consistently throughout the interface.
+team_a_name = team_a_school
+team_b_name = team_b_school
 
 banner_slot.markdown(
     f"""
