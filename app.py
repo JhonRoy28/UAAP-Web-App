@@ -43,7 +43,7 @@ FEATURE_COLUMNS = {
     "team_wins": "Team_Wins_Before",
     "opp_wins": "Opp_Wins_Before",
     "team_streak": "Team_Win_Streak",
-    "opp_streak": "Opponent_Win_Streak",
+    "opp_streak": "Opp_Win_Streak",
     "round": "Round",
 }
 
