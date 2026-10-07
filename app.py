@@ -38,12 +38,12 @@ FEATURE_COLUMNS = {
 
 ROUND_OPTIONS = ["Round 1", "Round 2", "Final Four", "Finals"]
 
-ROUND_AS_TEXT = False
+# Strictly convert all rounds to numbers so the model scaler never crashes on text
 ROUND_ENCODING = {
-    "Round 1": 1,
-    "Round 2": 2,
-    "Final Four": "Final Four",
-    "Finals": "Finals"
+    "Round 1": 1, 
+    "Round 2": 2, 
+    "Final Four": 3, 
+    "Finals": 4
 }
 
 WIN_LABELS = {"1", "1.0", "true", "win", "w", "won"}
@@ -229,15 +229,18 @@ def describe_streak(value: int) -> str:
     return "No active streak"
 
 def build_feature_frame(inputs: dict, model) -> pd.DataFrame:
-    round_value = inputs["round"] if ROUND_AS_TEXT else ROUND_ENCODING[inputs["round"]]
+    # Safely convert round text to numeric representation
+    round_value = ROUND_ENCODING[inputs["round"]]
+    
     row = {
-        FEATURE_COLUMNS["team_wins"]: inputs["team_wins"],
-        FEATURE_COLUMNS["opp_wins"]: inputs["opp_wins"],
-        FEATURE_COLUMNS["team_streak"]: inputs["team_streak"],
-        FEATURE_COLUMNS["opp_streak"]: inputs["opp_streak"],
-        FEATURE_COLUMNS["round"]: round_value,
+        FEATURE_COLUMNS["team_wins"]: int(inputs["team_wins"]),
+        FEATURE_COLUMNS["opp_wins"]: int(inputs["opp_wins"]),
+        FEATURE_COLUMNS["team_streak"]: int(inputs["team_streak"]),
+        FEATURE_COLUMNS["opp_streak"]: int(inputs["opp_streak"]),
+        FEATURE_COLUMNS["round"]: int(round_value),
     }
     frame = pd.DataFrame([row])
+    
     expected = getattr(model, "feature_names_in_", None)
     if expected is not None:
         frame = frame[list(expected)]
@@ -314,20 +317,20 @@ with col_a:
     with st.container(border=True):
         st.markdown('<span class="team-tag tag-a">Team A</span>', unsafe_allow_html=True)
         team_a_raw = st.text_input(
-            "Team name",
-            value="NU Lady Bulldogs",
+            "Team name", 
+            value="NU Lady Bulldogs", 
             key="team_a_name",
             help="Enter the official school or team name for Team A."
         )
         team_a_wins = st.slider(
-            "Wins before match",
-            min_value=0, max_value=14, value=7,
+            "Wins before match", 
+            min_value=0, max_value=14, value=7, 
             key="team_a_wins",
             help="Total number of games Team A has won prior to entering this match."
         )
         team_a_streak = st.slider(
-            "Win streak",
-            min_value=-10, max_value=10, value=2,
+            "Win streak", 
+            min_value=-10, max_value=10, value=2, 
             key="team_a_streak",
             help="Positive numbers indicate consecutive wins (e.g., +2). Negative numbers indicate consecutive losses (e.g., -1)."
         )
@@ -337,20 +340,20 @@ with col_b:
     with st.container(border=True):
         st.markdown('<span class="team-tag tag-b">Opponent</span>', unsafe_allow_html=True)
         team_b_raw = st.text_input(
-            "Team name",
-            value="DLSU Lady Spikers",
+            "Team name", 
+            value="DLSU Lady Spikers", 
             key="team_b_name",
             help="Enter the official school or team name for the opposing team."
         )
         team_b_wins = st.slider(
-            "Wins before match",
-            min_value=0, max_value=14, value=5,
+            "Wins before match", 
+            min_value=0, max_value=14, value=5, 
             key="team_b_wins",
             help="Total number of games the opponent has won prior to entering this match."
         )
         team_b_streak = st.slider(
-            "Win streak",
-            min_value=-10, max_value=10, value=1,
+            "Win streak", 
+            min_value=-10, max_value=10, value=1, 
             key="team_b_streak",
             help="Opponent's current momentum streak (positive for wins, negative for losses)."
         )
@@ -359,8 +362,8 @@ with col_b:
 st.markdown('<div class="section-title">Tournament Stage</div>', unsafe_allow_html=True)
 with st.container(border=True):
     selected_round = st.selectbox(
-        "Tournament round",
-        options=ROUND_OPTIONS,
+        "Tournament round", 
+        options=ROUND_OPTIONS, 
         key="tournament_round",
         help="Select whether this match takes place in Round 1, Round 2, the Final Four, or the Finals."
     )
