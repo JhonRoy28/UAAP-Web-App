@@ -1,8 +1,7 @@
 """
 UAAP Season 87 Volleyball Match Outcome Predictor
 -------------------------------------------------
-A Streamlit dashboard that predicts whether a team will win or lose against
-an opponent, based on pre-match momentum stats.
+A professional Streamlit dashboard predicting match outcomes based on pre-match momentum.
 """
 
 from __future__ import annotations
@@ -15,7 +14,7 @@ import pandas as pd
 import streamlit as st
 
 # ---------------------------------------------------------------------------
-# Page configuration (must be the first Streamlit call)
+# Page configuration
 # ---------------------------------------------------------------------------
 st.set_page_config(
     page_title="UAAP S87 Volleyball Predictor",
@@ -29,7 +28,6 @@ st.set_page_config(
 # ---------------------------------------------------------------------------
 MODEL_PATH = Path(__file__).parent / "uaap_volleyball_model.pkl"
 
-# Corrected feature mapping to match your CSV dataset exactly
 FEATURE_COLUMNS = {
     "team_wins": "Team_Wins_Before",
     "opp_wins": "Opp_Wins_Before",
@@ -40,7 +38,6 @@ FEATURE_COLUMNS = {
 
 ROUND_OPTIONS = ["Round 1", "Round 2", "Final Four", "Finals"]
 
-# Maps dropdown display labels to the exact data types expected by your model/CSV
 ROUND_AS_TEXT = False
 ROUND_ENCODING = {
     "Round 1": 1,
@@ -52,12 +49,11 @@ ROUND_ENCODING = {
 WIN_LABELS = {"1", "1.0", "true", "win", "w", "won"}
 TOSS_UP_MARGIN = 0.10
 
-# Accent colors
 COLOR_TEAM_A = "#2F80ED"
 COLOR_OPPONENT = "#F2994A"
 
 # ---------------------------------------------------------------------------
-# Custom CSS for Professional Sports Analytics UI
+# Custom CSS Styling
 # ---------------------------------------------------------------------------
 CUSTOM_CSS = """
 <style>
@@ -101,10 +97,7 @@ CUSTOM_CSS = """
         color: #ffffff;
         font-size: 2.3rem;
         font-weight: 800;
-        letter-spacing: -0.02em;
-        line-height: 1.15;
         margin: 0;
-        padding: 0;
     }
     .hero p {
         color: rgba(255, 255, 255, 0.82);
@@ -152,7 +145,6 @@ CUSTOM_CSS = """
     .matchup .team {
         font-size: 1.5rem;
         font-weight: 800;
-        letter-spacing: -0.01em;
     }
     .matchup .team-a { color: #2F80ED; }
     .matchup .team-b { color: #F2994A; }
@@ -162,7 +154,6 @@ CUSTOM_CSS = """
         background: rgba(127, 127, 127, 0.2);
         border-radius: 999px;
         padding: 0.3rem 0.8rem;
-        letter-spacing: 0.1em;
     }
     .matchup .round {
         width: 100%;
@@ -179,17 +170,10 @@ CUSTOM_CSS = """
         color: #ffffff;
         font-size: 1.1rem;
         font-weight: 700;
-        letter-spacing: 0.02em;
         border: none;
         border-radius: 14px;
         padding: 0.85rem 1.5rem;
         box-shadow: 0 8px 20px rgba(47, 128, 237, 0.38);
-        transition: transform 0.12s ease, box-shadow 0.12s ease;
-    }
-    .stButton > button:hover {
-        color: #ffffff;
-        transform: translateY(-2px);
-        box-shadow: 0 12px 26px rgba(47, 128, 237, 0.5);
     }
     .prob-bar {
         display: flex;
@@ -206,7 +190,6 @@ CUSTOM_CSS = """
         color: #ffffff;
         font-weight: 700;
         font-size: 0.95rem;
-        white-space: nowrap;
     }
     .prob-labels {
         display: flex;
@@ -228,15 +211,12 @@ CUSTOM_CSS = """
 st.markdown(CUSTOM_CSS, unsafe_allow_html=True)
 
 # ---------------------------------------------------------------------------
-# Model loading
+# Model loading & Helper Functions
 # ---------------------------------------------------------------------------
 @st.cache_resource(show_spinner="Loading prediction model...")
 def load_model(path: str):
     return joblib.load(path)
 
-# ---------------------------------------------------------------------------
-# Helper functions
-# ---------------------------------------------------------------------------
 def clean_name(raw: str, fallback: str) -> str:
     name = (raw or "").strip()
     return name if name else fallback
@@ -249,10 +229,7 @@ def describe_streak(value: int) -> str:
     return "No active streak"
 
 def build_feature_frame(inputs: dict, model) -> pd.DataFrame:
-    round_value = (
-        inputs["round"] if ROUND_AS_TEXT else ROUND_ENCODING[inputs["round"]]
-    )
-
+    round_value = inputs["round"] if ROUND_AS_TEXT else ROUND_ENCODING[inputs["round"]]
     row = {
         FEATURE_COLUMNS["team_wins"]: inputs["team_wins"],
         FEATURE_COLUMNS["opp_wins"]: inputs["opp_wins"],
@@ -261,12 +238,9 @@ def build_feature_frame(inputs: dict, model) -> pd.DataFrame:
         FEATURE_COLUMNS["round"]: round_value,
     }
     frame = pd.DataFrame([row])
-
     expected = getattr(model, "feature_names_in_", None)
     if expected is not None:
-        expected = list(expected)
-        frame = frame[expected]
-
+        frame = frame[list(expected)]
     return frame
 
 def predict_win_probability(model, frame: pd.DataFrame) -> float:
@@ -278,17 +252,14 @@ def predict_win_probability(model, frame: pd.DataFrame) -> float:
             len(classes) - 1,
         )
         return float(probabilities[win_index])
-
     prediction = model.predict(frame)[0]
     return 1.0 if str(prediction).strip().lower() in WIN_LABELS else 0.0
 
 def render_probability_bar(team_a: str, team_b: str, p_a: float) -> None:
     p_b = 1.0 - p_a
     pct_a, pct_b = p_a * 100, p_b * 100
-
     label_a = f"{pct_a:.1f}%" if pct_a >= 12 else ""
     label_b = f"{pct_b:.1f}%" if pct_b >= 12 else ""
-
     st.markdown(
         f"""
         <div class="prob-bar">
@@ -304,24 +275,20 @@ def render_probability_bar(team_a: str, team_b: str, p_a: float) -> None:
     )
 
 # ---------------------------------------------------------------------------
-# Hero header
+# Hero Header
 # ---------------------------------------------------------------------------
 st.markdown(
     """
     <div class="hero">
         <span class="badge">UAAP Season 87 · Volleyball</span>
         <h1>Match Outcome Predictor</h1>
-        <p>Enter each team's pre-match momentum and see who the model favors.
-        Wins before the match, current streaks, and the tournament round all
-        feed into the prediction.</p>
+        <p>Enter each team's pre-match momentum and see who the model favors based on historical Season 87 data.</p>
     </div>
     """,
     unsafe_allow_html=True,
 )
 
-# ---------------------------------------------------------------------------
-# Load model
-# ---------------------------------------------------------------------------
+# Load Model
 try:
     model = load_model(str(MODEL_PATH))
 except Exception as exc:
@@ -331,13 +298,13 @@ except Exception as exc:
     st.stop()
 
 # ---------------------------------------------------------------------------
-# Matchup banner placeholder
+# Matchup Preview Banner
 # ---------------------------------------------------------------------------
 st.markdown('<div class="section-title">Matchup Preview</div>', unsafe_allow_html=True)
 banner_slot = st.empty()
 
 # ---------------------------------------------------------------------------
-# Input cards
+# Input Cards with Informational Tooltips (?)
 # ---------------------------------------------------------------------------
 st.markdown('<div class="section-title">Pre-Match Momentum</div>', unsafe_allow_html=True)
 
@@ -346,22 +313,57 @@ col_a, col_b = st.columns(2, gap="large")
 with col_a:
     with st.container(border=True):
         st.markdown('<span class="team-tag tag-a">Team A</span>', unsafe_allow_html=True)
-        team_a_raw = st.text_input("Team name", value="NU Lady Bulldogs", key="team_a_name")
-        team_a_wins = st.slider("Wins before match", min_value=0, max_value=14, value=7, key="team_a_wins")
-        team_a_streak = st.slider("Win streak", min_value=-10, max_value=10, value=2, key="team_a_streak")
+        team_a_raw = st.text_input(
+            "Team name",
+            value="NU Lady Bulldogs",
+            key="team_a_name",
+            help="Enter the official school or team name for Team A."
+        )
+        team_a_wins = st.slider(
+            "Wins before match",
+            min_value=0, max_value=14, value=7,
+            key="team_a_wins",
+            help="Total number of games Team A has won prior to entering this match."
+        )
+        team_a_streak = st.slider(
+            "Win streak",
+            min_value=-10, max_value=10, value=2,
+            key="team_a_streak",
+            help="Positive numbers indicate consecutive wins (e.g., +2). Negative numbers indicate consecutive losses (e.g., -1)."
+        )
         st.caption(describe_streak(team_a_streak))
 
 with col_b:
     with st.container(border=True):
         st.markdown('<span class="team-tag tag-b">Opponent</span>', unsafe_allow_html=True)
-        team_b_raw = st.text_input("Team name", value="DLSU Lady Spikers", key="team_b_name")
-        team_b_wins = st.slider("Wins before match", min_value=0, max_value=14, value=5, key="team_b_wins")
-        team_b_streak = st.slider("Win streak", min_value=-10, max_value=10, value=1, key="team_b_streak")
+        team_b_raw = st.text_input(
+            "Team name",
+            value="DLSU Lady Spikers",
+            key="team_b_name",
+            help="Enter the official school or team name for the opposing team."
+        )
+        team_b_wins = st.slider(
+            "Wins before match",
+            min_value=0, max_value=14, value=5,
+            key="team_b_wins",
+            help="Total number of games the opponent has won prior to entering this match."
+        )
+        team_b_streak = st.slider(
+            "Win streak",
+            min_value=-10, max_value=10, value=1,
+            key="team_b_streak",
+            help="Opponent's current momentum streak (positive for wins, negative for losses)."
+        )
         st.caption(describe_streak(team_b_streak))
 
 st.markdown('<div class="section-title">Tournament Stage</div>', unsafe_allow_html=True)
 with st.container(border=True):
-    selected_round = st.selectbox("Tournament round", options=ROUND_OPTIONS, key="tournament_round")
+    selected_round = st.selectbox(
+        "Tournament round",
+        options=ROUND_OPTIONS,
+        key="tournament_round",
+        help="Select whether this match takes place in Round 1, Round 2, the Final Four, or the Finals."
+    )
 
 team_a_name = clean_name(team_a_raw, "Team A")
 team_b_name = clean_name(team_b_raw, "Opponent")
@@ -434,4 +436,4 @@ if predict_clicked:
             })
             st.dataframe(summary, hide_index=True)
 
-st.markdown('<div class="footer-note">Predictions come from a machine learning model trained on past UAAP results.</div>', unsafe_allow_html=True)
+st.markdown('<div class="footer-note">Predictions come from a machine learning model trained on Season 87 UAAP results.</div>', unsafe_allow_html=True)
