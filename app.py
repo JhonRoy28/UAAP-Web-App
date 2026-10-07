@@ -1,6 +1,16 @@
-import streamlit as st
-import pandas as pd
-import joblib
+import importlib
+
+# Import dynamically so the app can start and report a clear error if Streamlit
+# is not installed in the active environment.
+st = importlib.import_module("streamlit")
+
+# Import dynamically so the app can start and report a clear error if pandas
+# is not installed in the active environment.
+pd = importlib.import_module("pandas")
+
+# Import dynamically so the app can start and report a clear error if the
+# optional model-loading dependency is not installed in the active environment.
+joblib = importlib.import_module("joblib")
 
 st.set_page_config(page_title="UAAP Volleyball Match Predictor", page_icon="🏐")
 st.title("🏐 UAAP Season 87 Volleyball Match Outcome Predictor")
