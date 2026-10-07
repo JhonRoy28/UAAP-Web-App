@@ -63,9 +63,16 @@ WIN_LABELS = {"1", "1.0", "true", "win", "w", "won"}
 # distance of 50%.
 TOSS_UP_MARGIN = 0.10
 
-# Accent colors
-COLOR_TEAM_A = "#2F80ED"
-COLOR_OPPONENT = "#F2994A"
+SCHOOL_COLORS = {
+    "Adamson": "#0057A8",
+    "Ateneo": "#003DA5",
+    "DLSU": "#007A33",
+    "FEU": "#006B3F",
+    "NU": "#003DA5",
+    "UE": "#C8102E",
+    "UP": "#7B1113",
+    "UST": "#FDB81E",
+}
 
 # ---------------------------------------------------------------------------
 # Custom CSS
@@ -78,10 +85,29 @@ CUSTOM_CSS = """
         padding-top: 2rem;
         padding-bottom: 3rem;
     }
+    [data-testid="stAppViewContainer"] {
+        background: #ffffff;
+    }
+    [data-testid="stHeader"] {
+        background: #ffffff;
+    }
 
     /* Hero header */
     .hero {
-        background: linear-gradient(135deg, #0b1f3a 0%, #17407a 55%, #2f6fc4 100%);
+        background: #ffffff;
+        border: 1px solid #e5e7eb;
+        border-top: 8px solid #003da5;
+        border-image: linear-gradient(
+            90deg,
+            #0057a8 0%,
+            #003da5 14%,
+            #007a33 28%,
+            #006b3f 42%,
+            #c8102e 56%,
+            #7b1113 70%,
+            #fdb81e 84%,
+            #0057a8 100%
+        ) 1;
         border-radius: 20px;
         padding: 2.2rem 2.4rem;
         margin-bottom: 1.4rem;
@@ -100,9 +126,9 @@ CUSTOM_CSS = """
     }
     .hero .badge {
         display: inline-block;
-        background: rgba(255, 255, 255, 0.14);
-        color: #ffffff;
-        border: 1px solid rgba(255, 255, 255, 0.28);
+        background: #f3f4f6;
+        color: #374151;
+        border: 1px solid #d1d5db;
         border-radius: 999px;
         padding: 0.2rem 0.85rem;
         font-size: 0.78rem;
@@ -112,7 +138,7 @@ CUSTOM_CSS = """
         margin-bottom: 0.8rem;
     }
     .hero h1 {
-        color: #ffffff;
+        color: #111827;
         font-size: 2.3rem;
         font-weight: 800;
         letter-spacing: -0.02em;
@@ -121,7 +147,7 @@ CUSTOM_CSS = """
         padding: 0;
     }
     .hero p {
-        color: rgba(255, 255, 255, 0.82);
+        color: #4b5563;
         font-size: 1.02rem;
         margin: 0.6rem 0 0 0;
         max-width: 640px;
@@ -155,8 +181,7 @@ CUSTOM_CSS = """
         color: #ffffff;
         margin-bottom: 0.4rem;
     }
-    .tag-a { background: #2F80ED; }
-    .tag-b { background: #F2994A; }
+    .tag-a, .tag-b { color: #ffffff; }
 
     /* Matchup banner */
     .matchup {
@@ -176,8 +201,7 @@ CUSTOM_CSS = """
         font-weight: 800;
         letter-spacing: -0.01em;
     }
-    .matchup .team-a { color: #2F80ED; }
-    .matchup .team-b { color: #F2994A; }
+    .matchup .team { font-weight: 800; }
     .matchup .vs {
         font-size: 0.85rem;
         font-weight: 800;
@@ -199,7 +223,7 @@ CUSTOM_CSS = """
     /* Call-to-action button */
     .stButton > button {
         width: 100%;
-        background: linear-gradient(135deg, #1d5fd1 0%, #2f80ed 100%);
+        background: #003da5;
         color: #ffffff;
         font-size: 1.1rem;
         font-weight: 700;
@@ -287,6 +311,10 @@ def clean_name(raw: str, fallback: str) -> str:
     return name if name else fallback
 
 
+def school_text_color(school: str) -> str:
+    return "#111827" if school == "UST" else "#ffffff"
+
+
 def describe_streak(value: int) -> str:
     """Turn a streak number into plain words for the slider caption."""
     if value > 0:
@@ -349,7 +377,13 @@ def predict_win_probability(model, frame: pd.DataFrame) -> float:
     return 1.0 if str(prediction).strip().lower() in WIN_LABELS else 0.0
 
 
-def render_probability_bar(team_a: str, team_b: str, p_a: float) -> None:
+def render_probability_bar(
+    team_a: str,
+    team_b: str,
+    p_a: float,
+    color_a: str,
+    color_b: str,
+) -> None:
     """Draw a two-color split bar showing both win probabilities."""
     p_b = 1.0 - p_a
     pct_a, pct_b = p_a * 100, p_b * 100
@@ -360,8 +394,8 @@ def render_probability_bar(team_a: str, team_b: str, p_a: float) -> None:
     st.markdown(
         f"""
         <div class="prob-bar">
-            <div class="seg" style="width:{pct_a:.2f}%; background:{COLOR_TEAM_A};">{label_a}</div>
-            <div class="seg" style="width:{pct_b:.2f}%; background:{COLOR_OPPONENT};">{label_b}</div>
+            <div class="seg" style="width:{pct_a:.2f}%; background:{color_a};">{label_a}</div>
+            <div class="seg" style="width:{pct_b:.2f}%; background:{color_b};">{label_b}</div>
         </div>
         <div class="prob-labels">
             <span>{html.escape(team_a)}</span>
@@ -420,10 +454,21 @@ col_a, col_b = st.columns(2, gap="large")
 
 with col_a:
     with st.container(border=True):
-        st.markdown('<span class="team-tag tag-a">Team A</span>', unsafe_allow_html=True)
+        team_a_school = st.selectbox(
+            "Team A school",
+            options=list(SCHOOL_COLORS),
+            index=list(SCHOOL_COLORS).index("NU"),
+            key="team_a_school",
+        )
+        team_a_color = SCHOOL_COLORS[team_a_school]
+        st.markdown(
+            f'<span class="team-tag tag-a" style="background:{team_a_color}; '
+            f'color:{school_text_color(team_a_school)};">{team_a_school}</span>',
+            unsafe_allow_html=True,
+        )
         team_a_raw = st.text_input(
             "Team name",
-            placeholder="Enter Team A name",
+            value=team_a_school,
             key="team_a_name",
         )
         team_a_wins = st.slider(
@@ -446,10 +491,21 @@ with col_a:
 
 with col_b:
     with st.container(border=True):
-        st.markdown('<span class="team-tag tag-b">Opponent</span>', unsafe_allow_html=True)
+        team_b_school = st.selectbox(
+            "Opponent school",
+            options=list(SCHOOL_COLORS),
+            index=list(SCHOOL_COLORS).index("DLSU"),
+            key="team_b_school",
+        )
+        team_b_color = SCHOOL_COLORS[team_b_school]
+        st.markdown(
+            f'<span class="team-tag tag-b" style="background:{team_b_color}; '
+            f'color:{school_text_color(team_b_school)};">{team_b_school}</span>',
+            unsafe_allow_html=True,
+        )
         team_b_raw = st.text_input(
             "Team name",
-            placeholder="Enter Opponent name",
+            value=team_b_school,
             key="team_b_name",
         )
         team_b_wins = st.slider(
@@ -487,9 +543,9 @@ team_b_name = clean_name(team_b_raw, "Opponent")
 banner_slot.markdown(
     f"""
     <div class="matchup">
-        <span class="team team-a">{html.escape(team_a_name)}</span>
+        <span class="team" style="color:{team_a_color};">{html.escape(team_a_name)}</span>
         <span class="vs">VS</span>
-        <span class="team team-b">{html.escape(team_b_name)}</span>
+        <span class="team" style="color:{team_b_color};">{html.escape(team_b_name)}</span>
         <span class="round">{html.escape(selected_round)}</span>
     </div>
     """,
@@ -571,7 +627,13 @@ if predict_clicked:
             )
 
             # Visual split bar
-            render_probability_bar(team_a_name, team_b_name, p_a)
+            render_probability_bar(
+                team_a_name,
+                team_b_name,
+                p_a,
+                team_a_color,
+                team_b_color,
+            )
 
         # Show exactly what was sent to the model
         with st.expander("See the inputs used for this prediction"):
