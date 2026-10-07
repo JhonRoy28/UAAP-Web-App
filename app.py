@@ -1,16 +1,10 @@
-import importlib
+from pathlib import Path
 
-# Import dynamically so the app can start and report a clear error if Streamlit
-# is not installed in the active environment.
-st = importlib.import_module("streamlit")
+import joblib
+import pandas as pd
+import streamlit as st
 
-# Import dynamically so the app can start and report a clear error if pandas
-# is not installed in the active environment.
-pd = importlib.import_module("pandas")
-
-# Import dynamically so the app can start and report a clear error if the
-# optional model-loading dependency is not installed in the active environment.
-joblib = importlib.import_module("joblib")
+MODEL_PATH = Path(__file__).resolve().parent / "uaap_volleyball_model.pkl"
 
 st.set_page_config(page_title="UAAP Volleyball Match Predictor", page_icon="🏐")
 st.title("🏐 UAAP Season 87 Volleyball Match Outcome Predictor")
@@ -19,7 +13,7 @@ st.markdown("Predict match outcomes using pre-match team features and Bench's tr
 # 1. Load Model with caching
 @st.cache_resource
 def load_model():
-    return joblib.load('uaap_volleyball_model.pkl')
+    return joblib.load(MODEL_PATH)
 
 try:
     model = load_model()
