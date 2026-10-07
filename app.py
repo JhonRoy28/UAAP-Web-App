@@ -38,14 +38,6 @@ FEATURE_COLUMNS = {
 
 ROUND_OPTIONS = ["Round 1", "Round 2", "Final Four", "Finals"]
 
-# Strictly convert all rounds to numbers so the model scaler never crashes on text
-ROUND_ENCODING = {
-    "Round 1": 1, 
-    "Round 2": 2, 
-    "Final Four": 3, 
-    "Finals": 4
-}
-
 WIN_LABELS = {"1", "1.0", "true", "win", "w", "won"}
 TOSS_UP_MARGIN = 0.10
 
@@ -229,21 +221,32 @@ def describe_streak(value: int) -> str:
     return "No active streak"
 
 def build_feature_frame(inputs: dict, model) -> pd.DataFrame:
-    # Safely convert round text to numeric representation
-    round_value = ROUND_ENCODING[inputs["round"]]
+    # 1. Translate string rounds to pure numbers
+    mapping = {"Round 1": 1.0, "Round 2": 2.0, "Final Four": 3.0, "Finals": 4.0}
+    round_val = mapping.get(inputs["round"], 1.0)
     
+    # 2. Force every single input into a float (decimal number)
     row = {
-        FEATURE_COLUMNS["team_wins"]: int(inputs["team_wins"]),
-        FEATURE_COLUMNS["opp_wins"]: int(inputs["opp_wins"]),
-        FEATURE_COLUMNS["team_streak"]: int(inputs["team_streak"]),
-        FEATURE_COLUMNS["opp_streak"]: int(inputs["opp_streak"]),
-        FEATURE_COLUMNS["round"]: int(round_value),
+        FEATURE_COLUMNS["team_wins"]: float(inputs["team_wins"]),
+        FEATURE_COLUMNS["opp_wins"]: float(inputs["opp_wins"]),
+        FEATURE_COLUMNS["team_streak"]: float(inputs["team_streak"]),
+        FEATURE_COLUMNS["opp_streak"]: float(inputs["opp_streak"]),
+        FEATURE_COLUMNS["round"]: float(round_val),
     }
     frame = pd.DataFrame([row])
     
+    # 3. Dynamically match Bench's trained columns
     expected = getattr(model, "feature_names_in_", None)
     if expected is not None:
+        # If Bench didn't train with 'Round', this safely removes it!
+        missing = [col for col in expected if col not in frame.columns]
+        for col in missing:
+            frame[col] = 0.0 
         frame = frame[list(expected)]
+        
+    # 4. Ultimate Safety Net: Force dataframe to numeric, coercing any leftover errors
+    frame = frame.apply(pd.to_numeric, errors='coerce').fillna(0.0)
+    
     return frame
 
 def predict_win_probability(model, frame: pd.DataFrame) -> float:
@@ -432,6 +435,7 @@ if predict_clicked:
             render_probability_bar(team_a_name, team_b_name, p_a)
 
         with st.expander("See the inputs used for this prediction"):
+            # We show the original inputs on the screen for the user, but the math under the hood uses the floats!
             summary = pd.DataFrame({
                 "Stat": ["Wins before match", "Win streak", "Round"],
                 team_a_name: [team_a_wins, team_a_streak, selected_round],
