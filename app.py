@@ -27,6 +27,21 @@ FEATURES = [
 TEAMS = ["Adamson", "Ateneo", "DLSU", "FEU", "NU", "UE", "UP", "UST"]
 ROUND_LABELS = ["First Round", "Second Round", "Final Four", "Finals"]
 
+st.markdown(
+    """
+    <style>
+    .block-container { max-width: 760px; padding-top: 2.5rem; }
+    div.stButton > button {
+        width: 100%;
+        padding: 0.75rem 0;
+        font-size: 1.05rem;
+        font-weight: 600;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
+
 
 @st.cache_resource
 def load_model():
@@ -45,63 +60,93 @@ def load_dataset():
 try:
     st.title("🏐 UAAP Volleyball Match Predictor")
     st.write(
-        "Pick the two teams and set their pre-match stats, then click "
-        "**Predict** to see the estimated chance of a win or a loss."
+        "Estimate who wins a UAAP Season 87 women's volleyball match "
+        "in three quick steps."
     )
 
     model = load_model()
     data = load_dataset()
 
-    if data is not None:
-        with st.expander("Preview the dataset"):
-            st.dataframe(data.head(20), use_container_width=True)
-
-    st.subheader("Match setup")
-    match_round = st.select_slider("Round", options=ROUND_LABELS, value="First Round")
-
-    col_team, col_opp = st.columns(2)
-
-    with col_team:
-        st.markdown("**Your team**")
-        team = st.selectbox("Team", TEAMS, index=1)
-        team_wins = st.slider("Team wins before match", 0, 13, 6)
-        team_streak = st.slider("Team win streak", -13, 5, 0)
-
-    with col_opp:
-        st.markdown("**Opponent**")
-        opp_options = [t for t in TEAMS if t != team]
-        opponent = st.selectbox("Opponent", opp_options, index=0)
-        opp_wins = st.slider("Opponent wins before match", 0, 13, 6)
-        opp_streak = st.slider("Opponent win streak", -13, 5, 0)
-
-    if st.button("Predict", type="primary"):
-        inputs = pd.DataFrame(
-            [[team, opponent, match_round, team_wins, opp_wins, team_streak, opp_streak]],
-            columns=FEATURES,
+    # Step 1: teams
+    with st.container(border=True):
+        st.subheader("1. Pick the teams")
+        col_a, col_b = st.columns(2)
+        team = col_a.selectbox("Team", TEAMS, index=1, key="team")
+        opponent = col_b.selectbox(
+            "Opponent",
+            [t for t in TEAMS if t != team],
+            index=0,
+            key="opponent",
         )
 
-        # Match the column order the model was trained with, if it recorded it
-        if hasattr(model, "feature_names_in_"):
-            inputs = inputs[list(model.feature_names_in_)]
+    # Step 2: match stats
+    with st.container(border=True):
+        st.subheader("2. Set the match stats")
+        match_round = st.select_slider(
+            "Round", options=ROUND_LABELS, value="First Round", key="round"
+        )
 
-        probabilities = model.predict_proba(inputs)[0]
-        classes = list(model.classes_)
+        col_a, col_b = st.columns(2)
+        with col_a:
+            st.markdown(f"**{team}**")
+            team_wins = st.slider("Wins before the match", 0, 13, 6, key="team_wins")
+            team_streak = st.slider(
+                "Win streak (negative means losing streak)",
+                -13, 5, 0, key="team_streak",
+            )
+        with col_b:
+            st.markdown(f"**{opponent}**")
+            opp_wins = st.slider("Wins before the match", 0, 13, 6, key="opp_wins")
+            opp_streak = st.slider(
+                "Win streak (negative means losing streak)",
+                -13, 5, 0, key="opp_streak",
+            )
 
-        # Match_Outcome uses 1 for a win and 0 for a loss
-        win_index = classes.index(1) if 1 in classes else len(classes) - 1
-        win_prob = probabilities[win_index] * 100
-        loss_prob = 100 - win_prob
+    # Step 3: prediction
+    with st.container(border=True):
+        st.subheader("3. See the prediction")
+        clicked = st.button("Predict the winner", type="primary")
 
-        st.subheader(f"{team} vs {opponent}")
-        res_win, res_loss = st.columns(2)
-        res_win.metric(f"{team} win probability", f"{win_prob:.1f}%")
-        res_loss.metric(f"{team} loss probability", f"{loss_prob:.1f}%")
-        st.progress(int(round(win_prob)))
+        if clicked:
+            inputs = pd.DataFrame(
+                [[team, opponent, match_round, team_wins, opp_wins, team_streak, opp_streak]],
+                columns=FEATURES,
+            )
 
-        if win_prob >= 50:
-            st.success(f"The model favors {team} to win this match.")
+            # Match the column order the model was trained with, if it recorded it
+            if hasattr(model, "feature_names_in_"):
+                inputs = inputs[list(model.feature_names_in_)]
+
+            probabilities = model.predict_proba(inputs)[0]
+            classes = list(model.classes_)
+
+            # Match_Outcome uses 1 for a win and 0 for a loss
+            win_index = classes.index(1) if 1 in classes else len(classes) - 1
+            team_prob = probabilities[win_index] * 100
+            opp_prob = 100 - team_prob
+
+            res_a, res_b = st.columns(2)
+            res_a.metric(team, f"{team_prob:.1f}%")
+            res_b.metric(opponent, f"{opp_prob:.1f}%")
+            st.progress(int(round(team_prob)))
+
+            if abs(team_prob - 50) < 5:
+                st.info("Too close to call. The model sees this as an even match.")
+            elif team_prob > 50:
+                st.success(f"{team} is favored to win ({team_prob:.1f}% chance).")
+            else:
+                st.success(f"{opponent} is favored to win ({opp_prob:.1f}% chance).")
+
+            st.caption(
+                "This is an estimate learned from Season 87 results only. "
+                "It is not a guarantee."
+            )
         else:
-            st.warning(f"The model favors {opponent} in this match.")
+            st.caption("Click the button to see each team's chance of winning.")
+
+    if data is not None:
+        with st.expander("See the Season 87 data used to train the model"):
+            st.dataframe(data)
 
 except FileNotFoundError:
     st.warning(
