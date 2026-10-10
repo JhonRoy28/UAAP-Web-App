@@ -15,6 +15,8 @@ MODEL_FILE = "uaap_volleyball_model.pkl"
 DATA_FILE = "UAAP_Season87_Womens_Volleyball_Full__1_.csv"
 
 FEATURES = [
+    "Team",
+    "Opponent",
     "Round",
     "Team_Wins_Before",
     "Opp_Wins_Before",
@@ -22,12 +24,8 @@ FEATURES = [
     "Opp_Win_Streak",
 ]
 
+TEAMS = ["Adamson", "Ateneo", "DLSU", "FEU", "NU", "UE", "UP", "UST"]
 ROUND_LABELS = ["First Round", "Second Round", "Final Four", "Finals"]
-
-# How Round was turned into numbers when the model was trained.
-# Ask Bench. If the model reads the text labels directly, leave this as None.
-# Example if Bench used 1 to 4 in order: {"First Round": 1, "Second Round": 2, "Final Four": 3, "Finals": 4}
-ROUND_MAP = None
 
 
 @st.cache_resource
@@ -47,8 +45,8 @@ def load_dataset():
 try:
     st.title("🏐 UAAP Volleyball Match Predictor")
     st.write(
-        "Set the pre-match stats for both teams, then click **Predict** "
-        "to see the estimated chance of a win or a loss."
+        "Pick the two teams and set their pre-match stats, then click "
+        "**Predict** to see the estimated chance of a win or a loss."
     )
 
     model = load_model()
@@ -57,8 +55,6 @@ try:
     if data is not None:
         with st.expander("Preview the dataset"):
             st.dataframe(data.head(20), use_container_width=True)
-    else:
-        st.info(f"Dataset file '{DATA_FILE}' was not found, so the preview is hidden.")
 
     st.subheader("Match setup")
     match_round = st.select_slider("Round", options=ROUND_LABELS, value="First Round")
@@ -67,19 +63,20 @@ try:
 
     with col_team:
         st.markdown("**Your team**")
+        team = st.selectbox("Team", TEAMS, index=1)
         team_wins = st.slider("Team wins before match", 0, 13, 6)
         team_streak = st.slider("Team win streak", -13, 5, 0)
 
     with col_opp:
         st.markdown("**Opponent**")
+        opp_options = [t for t in TEAMS if t != team]
+        opponent = st.selectbox("Opponent", opp_options, index=0)
         opp_wins = st.slider("Opponent wins before match", 0, 13, 6)
         opp_streak = st.slider("Opponent win streak", -13, 5, 0)
 
     if st.button("Predict", type="primary"):
-        round_value = ROUND_MAP[match_round] if ROUND_MAP else match_round
-
         inputs = pd.DataFrame(
-            [[round_value, team_wins, opp_wins, team_streak, opp_streak]],
+            [[team, opponent, match_round, team_wins, opp_wins, team_streak, opp_streak]],
             columns=FEATURES,
         )
 
@@ -95,16 +92,16 @@ try:
         win_prob = probabilities[win_index] * 100
         loss_prob = 100 - win_prob
 
-        st.subheader("Prediction")
+        st.subheader(f"{team} vs {opponent}")
         res_win, res_loss = st.columns(2)
-        res_win.metric("Win probability", f"{win_prob:.1f}%")
-        res_loss.metric("Loss probability", f"{loss_prob:.1f}%")
+        res_win.metric(f"{team} win probability", f"{win_prob:.1f}%")
+        res_loss.metric(f"{team} loss probability", f"{loss_prob:.1f}%")
         st.progress(int(round(win_prob)))
 
         if win_prob >= 50:
-            st.success("The model favors your team to win this match.")
+            st.success(f"The model favors {team} to win this match.")
         else:
-            st.warning("The model favors the opponent in this match.")
+            st.warning(f"The model favors {opponent} in this match.")
 
 except FileNotFoundError:
     st.warning(
