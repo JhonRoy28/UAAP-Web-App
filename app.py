@@ -64,6 +64,11 @@ try:
         "in three quick steps."
     )
 
+    st.caption(
+        "Model: Random Forest, trained on UAAP Season 87 women's volleyball "
+        "results with a chronological 80/20 split."
+    )
+
     model = load_model()
     data = load_dataset()
 
@@ -143,6 +148,29 @@ try:
             )
         else:
             st.caption("Click the button to see each team's chance of winning.")
+
+    with st.expander("About this model and how to read the results"):
+        st.markdown(
+            """
+**Model:** a Random Forest Classifier inside a scikit-learn pipeline. It was
+trained on 60 Season 87 matches (120 records, each match seen from both
+teams' sides).
+
+**Inputs**
+- **Team and Opponent:** the two teams playing.
+- **Round:** the stage of the tournament.
+- **Wins before the match:** matches the team has already won this season (0 to 13).
+- **Win streak:** consecutive wins going into the match (-13 to 5). A negative
+  number means a losing streak.
+
+**Output:** the estimated chance, in percent, that each team wins. The two
+numbers add up to 100%. If they are within 5 points of each other, the match
+is called too close to call.
+
+**Accuracy:** about 67% on 12 held-out test matches. Treat the result as a
+rough estimate, not a guarantee.
+"""
+        )
 
     if data is not None:
         with st.expander("See the Season 87 data used to train the model"):
