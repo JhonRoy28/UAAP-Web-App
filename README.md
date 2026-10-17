@@ -130,4 +130,6 @@ UAAP-Web-App/
 
 ## Authors
 
-[Add group member names here]
+Jhon Roy B. Gamboa
+Leona Charlize D. De Chavez
+Bench Matthew C. Culubong
