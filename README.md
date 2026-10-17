@@ -5,7 +5,7 @@ A Streamlit web app that estimates the chance of a win or a loss in a UAAP Seaso
 **Live app:** https://uaap-web-app-7kncnzfkla9utmegq7tctj.streamlit.app/
 **Repository:** https://github.com/JhonRoy28/UAAP-Web-App
 
-This is the final group project for the Machine Learning course at National University (Instructor: Dr. Armida P. Salazar).
+This is the final group project for the Machine Learning course at National University (Instructor: Mr. Ken Oliver Caparros).
 
 ---
 
@@ -130,6 +130,6 @@ UAAP-Web-App/
 
 ## Authors
 
-GAMBOA, JHON ROY B
-DE CHAVEZ, LEONA
-CULUBONG, BENCH MATTHEW C.
+Jhon Roy B. Gamboa
+Leona Charlize D. De Chavez
+Bench Matthew C. Culubong
